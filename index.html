@@ -1,16 +1,14 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>Pagamento PIX</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
     * {
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Orbitron', sans-serif;
       background-color: #0f0f0f;
@@ -21,14 +19,12 @@
       border-radius: 12px;
       box-shadow: 0 0 12px #00ff88;
     }
-
     h2 {
       color: #00ff88;
       text-align: center;
       margin-bottom: 25px;
       text-shadow: 0 0 5px #00ff88;
     }
-
     input, textarea, button {
       width: 100%;
       padding: 10px 14px;
@@ -40,17 +36,14 @@
       font-size: 16px;
       transition: all 0.3s ease;
     }
-
     input::placeholder, textarea::placeholder {
       color: #888;
     }
-
     input:focus, textarea:focus {
       outline: none;
       border-color: #00ffaa;
       box-shadow: 0 0 5px #00ffaa;
     }
-
     button {
       background-color: #00ff88;
       color: #000;
@@ -59,12 +52,10 @@
       border: none;
       transition: 0.3s ease;
     }
-
     button:hover {
       background-color: #00ffaa;
       box-shadow: 0 0 10px #00ffaa;
     }
-
     #resultado img {
       display: block;
       margin: 20px auto 10px;
@@ -73,19 +64,16 @@
       border: 2px solid #00ff88;
       border-radius: 10px;
     }
-
     #resultado p {
       font-weight: bold;
       margin-bottom: 6px;
     }
-
     #resultado textarea {
       resize: none;
       font-family: monospace;
       background-color: #111;
       color: #0f0;
     }
-
     #btn-copiar {
       background-color: #111;
       color: #00ff88;
@@ -95,12 +83,10 @@
       border-radius: 6px;
       width: 100%;
     }
-
     #btn-copiar:hover {
       background-color: #00ff88;
       color: #000;
     }
-
     #status {
       font-weight: bold;
       color: #00ff88;
@@ -108,7 +94,6 @@
       text-align: center;
       font-size: 18px;
     }
-
     a {
       text-decoration: none;
       color: #00ffaa;
@@ -119,30 +104,33 @@
       font-size: 18px;
       transition: color 0.3s ease;
     }
-
     a:hover {
       color: #ffffff;
       text-shadow: 0 0 5px #00ffaa;
     }
-
     .link-image {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
     }
-
     .link-image img {
       max-width: 100%;
       height: auto;
       border-radius: 10px;
       border: 2px solid #00ff88;
     }
-
+    #secret-input {
+      display: none;
+      margin-top: 10px;
+    }
+    #secret-links {
+      display: none;
+      margin-top: 10px;
+    }
     @media screen and (max-width: 480px) {
       body {
         margin: 20px;
       }
-
       a {
         font-size: 20px;
       }
@@ -150,10 +138,19 @@
   </style>
 </head>
 <body>
-  <a href="todos.html">📄 Ver Pagamentos Aprovados</a>
-  <a href="adm.html">⚙️ Alterar Valor</a>
+  <!-- Links secretos escondidos inicialmente -->
+  <div id="secret-links">
+    <a href="todos.html">📄 Ver Pagamentos Aprovados</a>
+    <a href="adm.html">⚙️ Alterar Valor</a>
+  </div>
 
-  <h4 style="text-align: justify;">“quem faz a festa são vocês, obrigado mais uma vez, nos vemos em breve…”</h4>
+  <!-- Frase clicável -->
+  <h4 id="secret-phrase" style="text-align: justify; cursor: pointer;">
+    “quem faz a festa são vocês, obrigado mais uma vez, nos vemos em breve…”
+  </h4>
+
+  <!-- Input para digitar o código secreto -->
+  <input type="text" id="secret-input" placeholder="Digite o código secreto" />
 
   <div class="link-image">
     <img src="./fundo.png" alt="Imagem PIX" />
@@ -297,6 +294,29 @@
     }
 
     carregarValorDoBanco();
+
+    // --- Nova lógica para o clique secreto e input de código ---
+    const phrase = document.getElementById("secret-phrase");
+    const secretInput = document.getElementById("secret-input");
+    const secretLinks = document.getElementById("secret-links");
+    let clickCount = 0;
+
+    phrase.addEventListener("click", () => {
+      clickCount++;
+      if (clickCount === 3) {
+        secretInput.style.display = "block";
+        secretInput.focus();
+      }
+    });
+
+    secretInput.addEventListener("input", () => {
+      const value = secretInput.value.trim();
+      if (value === "zankaadm") {
+        secretLinks.style.display = "block";
+      } else {
+        secretLinks.style.display = "none";
+      }
+    });
   </script>
 </body>
 </html>
