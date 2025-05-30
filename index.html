@@ -1,87 +1,175 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pagamento PIX</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      color: #2e7d32;
+      margin-bottom: 20px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    button {
+      background-color: #2e7d32;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1b4d1b;
+    }
+
+    #resultado img {
+      display: block;
+      margin: 15px auto;
+      width: 180px; /* QR code menor */
+      height: 180px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    #resultado p {
+      font-weight: bold;
+      margin: 10px 0 5px;
+    }
+
+    #resultado textarea {
+      resize: none;
+      font-family: monospace;
+    }
+
+    #btn-copiar {
+      background-color: #4caf50;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 6px;
+      width: auto;
+    }
+
+    #btn-copiar:hover {
+      background-color: #388e3c;
+    }
+
+    #status {
+      font-weight: bold;
+      color: green;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    a {
+      text-decoration: none;
+      color: #2e7d32;
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
-  <a href="todos.html">todos</a>
+  <a href="todos.html">Ver Pagamentos Aprovados</a>
   <h2>Pagamento via PIX</h2>
 
-  <input type="text" id="nome" placeholder="Digite seu nome" /><br/><br/>
-  <input type="email" id="email" placeholder="Digite seu e-mail" /><br/><br/>
-  <input type="text" id="cpf" placeholder="Digite seu CPF" /><br/><br/>
-  <input type="number" id="valor" placeholder="Digite o valor" /><br/><br/>
-
+  <input type="text" id="first_name" placeholder="Nome" />
+  <input type="text" id="last_name" placeholder="Sobrenome" />
+  <input type="email" id="email" placeholder="Email" />
+  <input type="text" id="cpf" placeholder="CPF" />
+  <input type="number" id="valor" placeholder="Digite o valor" />
   <button onclick="gerarPix()">Gerar PIX</button>
 
-  <div id="resultado" style="margin-top: 20px;"></div>
-  <p id="status" style="font-weight: bold; color: green;"></p>
+  <div id="resultado"></div>
+  <p id="status"></p>
 
-  <script>
-    let paymentId = null;
+<script>
+  const baseUrl = "https://festfy.onrender.com";
 
-    function gerarPix() {
-      const valor = parseFloat(document.getElementById("valor").value);
-      const nomeCompleto = document.getElementById("nome").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const cpf = document.getElementById("cpf").value.trim();
+  let paymentId = null;
 
-      if (!valor || !nomeCompleto || !email || !cpf) {
-        alert("Preencha todos os campos!");
+  function gerarPix() {
+    const valor = parseFloat(document.getElementById("valor").value);
+    const first_name = document.getElementById("first_name").value.trim();
+    const last_name = document.getElementById("last_name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const cpf = document.getElementById("cpf").value.trim();
+
+    if (!valor || !first_name || !email || !cpf) {
+      alert("Por favor, preencha nome, email, cpf e valor.");
+      return;
+    }
+
+    fetch(`${baseUrl}/pix`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ valor, first_name, last_name, email, cpf })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert("Erro: " + data.error);
         return;
       }
+      paymentId = data.payment_id;
+      document.getElementById("resultado").innerHTML = `
+        <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" />
+        <p>Código Copia e Cola:</p>
+        <textarea id="codigoPix" rows="3" cols="60" readonly>${data.qr_code}</textarea>
+        <button id="btn-copiar" onclick="copiarCodigo()">Copiar Código</button>
+      `;
+      document.getElementById("status").innerText = "";
+      checarStatus();
+    })
+    .catch(() => alert("Erro ao gerar PIX"));
+  }
 
-      const [first_name, ...rest] = nomeCompleto.split(" ");
-      const last_name = rest.join(" ");
+  function copiarCodigo() {
+    const codigo = document.getElementById("codigoPix");
+    codigo.select();
+    codigo.setSelectionRange(0, 99999); // Para mobile
+    document.execCommand("copy");
+    alert("Código copiado para a área de transferência!");
+  }
 
-      fetch('http://localhost:5000/pix', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          valor: valor,
-          first_name: first_name,
-          last_name: last_name,
-          email: email,
-          cpf: cpf,
-          texto_extra: nomeCompleto
+  function checarStatus() {
+    if (!paymentId) return;
+
+    const interval = setInterval(() => {
+      fetch(`${baseUrl}/status/${paymentId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "approved") {
+            document.getElementById("status").innerText = "Pagamento Aprovado!";
+            clearInterval(interval);
+          } else {
+            console.log("Status atual:", data.status);
+          }
         })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert("Erro: " + data.error);
-          return;
-        }
-
-        paymentId = data.payment_id;
-        document.getElementById("resultado").innerHTML = `
-          <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" /><br/>
-          <p>Código Copia e Cola:</p>
-          <textarea rows="3" cols="60">${data.qr_code}</textarea>
-        `;
-        checarStatus();
-      })
-      .catch(() => alert("Erro ao gerar PIX"));
-    }
-
-    function checarStatus() {
-      if (!paymentId) return;
-
-      const interval = setInterval(() => {
-        fetch(`http://localhost:5000/status/${paymentId}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.status === "approved") {
-              document.getElementById("status").innerText = "Pagamento Aprovado!";
-              clearInterval(interval);
-            } else {
-              console.log("Status atual:", data.status);
-            }
-          })
-          .catch(err => console.error("Erro ao verificar status:", err));
-      }, 5000);
-    }
-  </script>
+        .catch(err => console.error("Erro ao verificar status:", err));
+    }, 5000);
+  }
+</script>
 </body>
 </html>

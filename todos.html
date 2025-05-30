@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pagamentos Aprovados</title>
   <style>
     body {
@@ -59,7 +59,9 @@
   </table>
 
   <script>
-    fetch("http://localhost:5000/pagamentos")
+    const baseUrl = "https://festfy.onrender.com";
+
+    fetch(`${baseUrl}/pagamentos`)
       .then(res => res.json())
       .then(data => {
         const tbody = document.getElementById("tabela-pagamentos");
