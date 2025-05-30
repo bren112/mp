@@ -1,16 +1,14 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>Pagamento PIX</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
     * {
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Orbitron', sans-serif;
       background-color: #0f0f0f;
@@ -21,14 +19,12 @@
       border-radius: 12px;
       box-shadow: 0 0 12px #00ff88;
     }
-
     h2 {
       color: #00ff88;
       text-align: center;
       margin-bottom: 25px;
       text-shadow: 0 0 5px #00ff88;
     }
-
     input, textarea, button {
       width: 100%;
       padding: 10px 14px;
@@ -40,17 +36,14 @@
       font-size: 16px;
       transition: all 0.3s ease;
     }
-
     input::placeholder, textarea::placeholder {
       color: #888;
     }
-
     input:focus, textarea:focus {
       outline: none;
       border-color: #00ffaa;
       box-shadow: 0 0 5px #00ffaa;
     }
-
     button {
       background-color: #00ff88;
       color: #000;
@@ -59,12 +52,10 @@
       border: none;
       transition: 0.3s ease;
     }
-
     button:hover {
       background-color: #00ffaa;
       box-shadow: 0 0 10px #00ffaa;
     }
-
     #resultado img {
       display: block;
       margin: 20px auto 10px;
@@ -73,19 +64,16 @@
       border: 2px solid #00ff88;
       border-radius: 10px;
     }
-
     #resultado p {
       font-weight: bold;
       margin-bottom: 6px;
     }
-
     #resultado textarea {
       resize: none;
       font-family: monospace;
       background-color: #111;
       color: #0f0;
     }
-
     #btn-copiar {
       background-color: #111;
       color: #00ff88;
@@ -95,12 +83,10 @@
       border-radius: 6px;
       width: 100%;
     }
-
     #btn-copiar:hover {
       background-color: #00ff88;
       color: #000;
     }
-
     #status {
       font-weight: bold;
       color: #00ff88;
@@ -108,7 +94,6 @@
       text-align: center;
       font-size: 18px;
     }
-
     a {
       text-decoration: none;
       color: #00ffaa;
@@ -119,35 +104,33 @@
       font-size: 18px;
       transition: color 0.3s ease;
     }
-
     a:hover {
       color: #ffffff;
       text-shadow: 0 0 5px #00ffaa;
     }
-
     .link-image {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
     }
-
     .link-image img {
       max-width: 100%;
       height: auto;
       border-radius: 10px;
       border: 2px solid #00ff88;
     }
-
-    #senha-container {
+    #secret-input {
       display: none;
-      margin-bottom: 20px;
+      margin-top: 10px;
     }
-
+    #secret-links {
+      display: none;
+      margin-top: 10px;
+    }
     @media screen and (max-width: 480px) {
       body {
         margin: 20px;
       }
-
       a {
         font-size: 20px;
       }
@@ -155,21 +138,19 @@
   </style>
 </head>
 <body>
-  <!-- Links inicialmente escondidos -->
-  <div id="admin-links" style="display:none;">
+  <!-- Links secretos escondidos inicialmente -->
+  <div id="secret-links">
     <a href="todos.html">📄 Ver Pagamentos Aprovados</a>
     <a href="adm.html">⚙️ Alterar Valor</a>
   </div>
 
-  <!-- Frase para clicar 3 vezes -->
+  <!-- Frase clicável -->
   <h4 id="secret-phrase" style="text-align: justify; cursor: pointer;">
     “quem faz a festa são vocês, obrigado mais uma vez, nos vemos em breve…”
   </h4>
 
-  <!-- Input de senha, só aparece depois dos 3 cliques -->
-  <div id="senha-container">
-    <input type="password" id="senha" placeholder="Digite a senha" />
-  </div>
+  <!-- Input para digitar o código secreto -->
+  <input type="text" id="secret-input" placeholder="Digite o código secreto" />
 
   <div class="link-image">
     <img src="./fundo.png" alt="Imagem PIX" />
@@ -196,29 +177,6 @@
     const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // Contador de cliques na frase secreta
-    let clickCount = 0;
-    const secretPhrase = document.getElementById("secret-phrase");
-    const senhaContainer = document.getElementById("senha-container");
-    const adminLinks = document.getElementById("admin-links");
-    const senhaInput = document.getElementById("senha");
-
-    secretPhrase.addEventListener("click", () => {
-      clickCount++;
-      if (clickCount === 3) {
-        senhaContainer.style.display = "block";
-        senhaInput.focus();
-      }
-    });
-
-    // Mostrar links se senha correta
-    senhaInput.addEventListener("input", () => {
-      if (senhaInput.value === "zankaadm") {
-        adminLinks.style.display = "block";
-        senhaContainer.style.display = "none";
-      }
-    });
 
     async function gerarPix() {
       const valor = parseFloat(document.getElementById("valor").value);
@@ -321,8 +279,44 @@
       }, 5000);
     }
 
-    // Preencher valor na página de pagamento (se desejar pode ajustar)
-    document.getElementById("valor").value = "100"; // Exemplo: valor fixo ou preencher dinamicamente
+    async function carregarValorDoBanco() {
+      const { data, error } = await supabaseClient
+        .from("valor")
+        .select("valor")
+        .order("id", { ascending: false })
+        .limit(1);
+
+      if (!error && data.length > 0) {
+        document.getElementById("valor").value = data[0].valor;
+      } else {
+        document.getElementById("valor").value = 3;
+      }
+    }
+
+    carregarValorDoBanco();
+
+    // --- Nova lógica para o clique secreto e input de código ---
+    const phrase = document.getElementById("secret-phrase");
+    const secretInput = document.getElementById("secret-input");
+    const secretLinks = document.getElementById("secret-links");
+    let clickCount = 0;
+
+    phrase.addEventListener("click", () => {
+      clickCount++;
+      if (clickCount === 3) {
+        secretInput.style.display = "block";
+        secretInput.focus();
+      }
+    });
+
+    secretInput.addEventListener("input", () => {
+      const value = secretInput.value.trim();
+      if (value === "zankaadm") {
+        secretLinks.style.display = "block";
+      } else {
+        secretLinks.style.display = "none";
+      }
+    });
   </script>
 </body>
 </html>
