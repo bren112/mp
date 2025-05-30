@@ -3,10 +3,13 @@ from flask_cors import CORS
 import mercadopago
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # libera CORS para todas origens
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 ACCESS_TOKEN = "APP_USR-6628085664452409-012710-9be3f36b0a383a8f6fdc705736c66d76-536473269"
 sdk = mercadopago.SDK(ACCESS_TOKEN)
+
+# Lista para armazenar os pagamentos
+pagamentos_realizados = []
 
 @app.route("/pix", methods=["POST"])
 def gerar_pix():
@@ -45,6 +48,16 @@ def gerar_pix():
         payment_response = sdk.payment().create(payment_data)
         response = payment_response["response"]
 
+        # Armazena os dados do pagamento
+        pagamentos_realizados.append({
+            "payment_id": response["id"],
+            "nome": f"{first_name} {last_name}",
+            "email": email,
+            "cpf": cpf,
+            "valor": valor,
+            "status": "pendente"
+        })
+
         return jsonify({
             "payment_id": response["id"],
             "qr_code": response["point_of_interaction"]["transaction_data"]["qr_code"],
@@ -58,9 +71,21 @@ def verificar_status(payment_id):
     try:
         payment = sdk.payment().get(payment_id)
         status = payment["response"]["status"]
+
+        # Atualiza o status na lista
+        for pag in pagamentos_realizados:
+            if str(pag["payment_id"]) == str(payment_id):
+                pag["status"] = status
+                break
+
         return jsonify({"status": status})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/pagamentos", methods=["GET"])
+def listar_pagamentos_aprovados():
+    aprovados = [pag for pag in pagamentos_realizados if pag["status"] == "approved"]
+    return jsonify(aprovados)
 
 if __name__ == "__main__":
     app.run(debug=True)

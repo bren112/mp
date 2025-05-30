@@ -5,8 +5,14 @@
   <title>Pagamento PIX</title>
 </head>
 <body>
+  <a href="todos.html">todos</a>
   <h2>Pagamento via PIX</h2>
-  <input type="number" id="valor" placeholder="Digite o valor" />
+
+  <input type="text" id="nome" placeholder="Digite seu nome" /><br/><br/>
+  <input type="email" id="email" placeholder="Digite seu e-mail" /><br/><br/>
+  <input type="text" id="cpf" placeholder="Digite seu CPF" /><br/><br/>
+  <input type="number" id="valor" placeholder="Digite o valor" /><br/><br/>
+
   <button onclick="gerarPix()">Gerar PIX</button>
 
   <div id="resultado" style="margin-top: 20px;"></div>
@@ -17,13 +23,37 @@
 
     function gerarPix() {
       const valor = parseFloat(document.getElementById("valor").value);
+      const nomeCompleto = document.getElementById("nome").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const cpf = document.getElementById("cpf").value.trim();
+
+      if (!valor || !nomeCompleto || !email || !cpf) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      const [first_name, ...rest] = nomeCompleto.split(" ");
+      const last_name = rest.join(" ");
+
       fetch('http://localhost:5000/pix', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ valor: valor })
+        body: JSON.stringify({
+          valor: valor,
+          first_name: first_name,
+          last_name: last_name,
+          email: email,
+          cpf: cpf,
+          texto_extra: nomeCompleto
+        })
       })
       .then(res => res.json())
       .then(data => {
+        if (data.error) {
+          alert("Erro: " + data.error);
+          return;
+        }
+
         paymentId = data.payment_id;
         document.getElementById("resultado").innerHTML = `
           <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" /><br/>
@@ -50,7 +80,7 @@
             }
           })
           .catch(err => console.error("Erro ao verificar status:", err));
-      }, 5000); // verifica a cada 5 segundos
+      }, 5000);
     }
   </script>
 </body>

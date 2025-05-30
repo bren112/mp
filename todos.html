@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagamentos Aprovados</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+
+    h2 {
+      color: #2e7d32;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #e8f5e9;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .status {
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>Lista de Pagamentos Aprovados</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>CPF</th>
+        <th>Valor</th>
+        <th>Status</th>
+        <th>Payment ID</th>
+      </tr>
+    </thead>
+    <tbody id="tabela-pagamentos">
+      <!-- Linhas serão inseridas via JavaScript -->
+    </tbody>
+  </table>
+
+  <script>
+    fetch("http://localhost:5000/pagamentos")
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById("tabela-pagamentos");
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6">Nenhum pagamento aprovado encontrado.</td></tr>`;
+          return;
+        }
+
+        data.forEach(pag => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${pag.nome}</td>
+            <td>${pag.email}</td>
+            <td>${pag.cpf}</td>
+            <td>R$ ${pag.valor.toFixed(2)}</td>
+            <td class="status">${pag.status}</td>
+            <td>${pag.payment_id}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error("Erro ao carregar pagamentos:", err);
+        document.getElementById("tabela-pagamentos").innerHTML = `
+          <tr><td colspan="6">Erro ao carregar dados.</td></tr>`;
+      });
+  </script>
+</body>
+</html>
