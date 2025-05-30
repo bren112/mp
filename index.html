@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagamento PIX</title>
+</head>
+<body>
+  <h2>Pagamento via PIX</h2>
+  <input type="number" id="valor" placeholder="Digite o valor" />
+  <button onclick="gerarPix()">Gerar PIX</button>
+
+  <div id="resultado" style="margin-top: 20px;"></div>
+  <p id="status" style="font-weight: bold; color: green;"></p>
+
+  <script>
+    let paymentId = null;
+
+    function gerarPix() {
+      const valor = parseFloat(document.getElementById("valor").value);
+      fetch('http://localhost:5000/pix', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ valor: valor })
+      })
+      .then(res => res.json())
+      .then(data => {
+        paymentId = data.payment_id;
+        document.getElementById("resultado").innerHTML = `
+          <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" /><br/>
+          <p>Código Copia e Cola:</p>
+          <textarea rows="3" cols="60">${data.qr_code}</textarea>
+        `;
+        checarStatus();
+      })
+      .catch(() => alert("Erro ao gerar PIX"));
+    }
+
+    function checarStatus() {
+      if (!paymentId) return;
+
+      const interval = setInterval(() => {
+        fetch(`http://localhost:5000/status/${paymentId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === "approved") {
+              document.getElementById("status").innerText = "Pagamento Aprovado!";
+              clearInterval(interval);
+            } else {
+              console.log("Status atual:", data.status);
+            }
+          })
+          .catch(err => console.error("Erro ao verificar status:", err));
+      }, 5000); // verifica a cada 5 segundos
+    }
+  </script>
+</body>
+</html>
