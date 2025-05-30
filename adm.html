@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Atualizar Valor no Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #mensagem {
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>Atualizar valor PIX no Supabase (ID 1)</h2>
+  <input type="number" id="valor" placeholder="Digite o valor" step="0.01" /><br/>
+  <button onclick="enviarValor()">Atualizar</button>
+
+  <p id="mensagem"></p>
+
+  <script>
+    const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function enviarValor() {
+      const valor = parseFloat(document.getElementById("valor").value);
+
+      if (isNaN(valor) || valor <= 0) {
+        alert("Digite um valor válido.");
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("valor")
+        .update({ valor })         // Atualiza o campo "valor"
+        .eq("id", 1);              // Onde id = 1
+
+      if (error) {
+        console.error("Erro:", error);
+        document.getElementById("mensagem").innerText = "Erro ao atualizar valor.";
+      } else {
+        console.log("Valor atualizado:", data);
+        document.getElementById("mensagem").innerText = "Valor atualizado com sucesso!";
+        document.getElementById("valor").value = ""; // limpa o campo
+      }
+    }
+  </script>
+</body>
+</html>

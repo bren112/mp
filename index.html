@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+
   <title>Pagamento PIX</title>
   <style>
     body {
@@ -91,19 +92,20 @@
   </style>
 </head>
 <body>
-  <a href="todos.html">Ver Pagamentos Aprovados</a>
+  <a href="todos.html">Ver Pagamentos Aprovados</a><br>
+  <a href="adm.html">Altera Valor</a>
   <h2>Pagamento via PIX</h2>
 
   <input type="text" id="first_name" placeholder="Nome" />
   <input type="text" id="last_name" placeholder="Sobrenome" />
   <input type="email" id="email" placeholder="Email" />
   <input type="text" id="cpf" placeholder="CPF" />
-  <input type="number" id="valor" placeholder="Digite o valor" />
+  <input type="number" id="valor" disabled />
   <button onclick="gerarPix()">Gerar PIX</button>
 
   <div id="resultado"></div>
   <p id="status"></p>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
   const baseUrl = "https://festfy.onrender.com";
 
@@ -169,7 +171,31 @@
         })
         .catch(err => console.error("Erro ao verificar status:", err));
     }, 5000);
+
   }
+
+  const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function carregarValorDoBanco() {
+  const { data, error } = await supabaseClient
+    .from("valor")
+    .select("valor")
+    .eq("id", 1)
+    .single();
+
+  if (error) {
+    console.error("Erro ao buscar valor:", error);
+    return;
+  }
+
+  document.getElementById("valor").value = data.valor;
+}
+
+window.onload = carregarValorDoBanco;
+
 </script>
 </body>
 </html>
