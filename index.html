@@ -2,200 +2,327 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Pagamento PIX</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      max-width: 400px;
-      line-height: 1.5;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0f0f0f;
+      color: #f1f1f1;
+      margin: 30px auto;
+      max-width: 420px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px #00ff88;
     }
 
     h2 {
-      color: #2e7d32;
-      margin-bottom: 20px;
+      color: #00ff88;
+      text-align: center;
+      margin-bottom: 25px;
+      text-shadow: 0 0 5px #00ff88;
     }
 
     input, textarea, button {
       width: 100%;
-      padding: 8px 10px;
-      margin-bottom: 12px;
-      box-sizing: border-box;
+      padding: 10px 14px;
+      margin-bottom: 15px;
+      background-color: #1a1a1a;
+      color: #fff;
+      border: 1px solid #00ff88;
+      border-radius: 6px;
       font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #888;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #00ffaa;
+      box-shadow: 0 0 5px #00ffaa;
     }
 
     button {
-      background-color: #2e7d32;
-      color: white;
+      background-color: #00ff88;
+      color: #000;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      border: none;
+      transition: 0.3s ease;
     }
 
     button:hover {
-      background-color: #1b4d1b;
+      background-color: #00ffaa;
+      box-shadow: 0 0 10px #00ffaa;
     }
 
     #resultado img {
       display: block;
-      margin: 15px auto;
-      width: 180px; /* QR code menor */
+      margin: 20px auto 10px;
+      width: 180px;
       height: 180px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      border: 2px solid #00ff88;
+      border-radius: 10px;
     }
 
     #resultado p {
       font-weight: bold;
-      margin: 10px 0 5px;
+      margin-bottom: 6px;
     }
 
     #resultado textarea {
       resize: none;
       font-family: monospace;
+      background-color: #111;
+      color: #0f0;
     }
 
     #btn-copiar {
-      background-color: #4caf50;
-      color: white;
+      background-color: #111;
+      color: #00ff88;
+      border: 1px solid #00ff88;
       font-weight: bold;
-      border: none;
-      padding: 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 6px;
-      width: auto;
+      padding: 10px 14px;
+      border-radius: 6px;
+      width: 100%;
     }
 
     #btn-copiar:hover {
-      background-color: #388e3c;
+      background-color: #00ff88;
+      color: #000;
     }
 
     #status {
       font-weight: bold;
-      color: green;
+      color: #00ff88;
       margin-top: 20px;
       text-align: center;
+      font-size: 18px;
     }
 
     a {
       text-decoration: none;
-      color: #2e7d32;
+      color: #00ffaa;
       font-weight: bold;
-      display: inline-block;
+      display: block;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 18px;
+      transition: color 0.3s ease;
+    }
+
+    a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 5px #00ffaa;
+    }
+
+    .link-image {
+      display: flex;
+      justify-content: center;
       margin-bottom: 20px;
+    }
+
+    .link-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 2px solid #00ff88;
+    }
+
+    #senha-container {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    @media screen and (max-width: 480px) {
+      body {
+        margin: 20px;
+      }
+
+      a {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <a href="todos.html">Ver Pagamentos Aprovados</a><br>
-  <a href="adm.html">Altera Valor</a>
-  <h2>Pagamento via PIX</h2>
+  <!-- Links inicialmente escondidos -->
+  <div id="admin-links" style="display:none;">
+    <a href="todos.html">📄 Ver Pagamentos Aprovados</a>
+    <a href="adm.html">⚙️ Alterar Valor</a>
+  </div>
+
+  <!-- Frase para clicar 3 vezes -->
+  <h4 id="secret-phrase" style="text-align: justify; cursor: pointer;">
+    “quem faz a festa são vocês, obrigado mais uma vez, nos vemos em breve…”
+  </h4>
+
+  <!-- Input de senha, só aparece depois dos 3 cliques -->
+  <div id="senha-container">
+    <input type="password" id="senha" placeholder="Digite a senha" />
+  </div>
+
+  <div class="link-image">
+    <img src="./fundo.png" alt="Imagem PIX" />
+  </div>
+
+  <h2>💸 Pagamento via PIX</h2>
 
   <input type="text" id="first_name" placeholder="Nome" />
   <input type="text" id="last_name" placeholder="Sobrenome" />
-  <input type="email" id="email" placeholder="Email" />
   <input type="text" id="cpf" placeholder="CPF" />
+  <input type="text" id="cidade" placeholder="Cidade" />
   <input type="number" id="valor" disabled />
-  <button onclick="gerarPix()">Gerar PIX</button>
+  <button onclick="gerarPix()">🎯 Gerar PIX</button>
 
   <div id="resultado"></div>
   <p id="status"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script>
-  const baseUrl = "https://festfy.onrender.com";
+  <script>
+    const baseUrl = "https://festfy.onrender.com";
+    let paymentId = null;
 
-  let paymentId = null;
+    const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  function gerarPix() {
-    const valor = parseFloat(document.getElementById("valor").value);
-    const first_name = document.getElementById("first_name").value.trim();
-    const last_name = document.getElementById("last_name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const cpf = document.getElementById("cpf").value.trim();
+    // Contador de cliques na frase secreta
+    let clickCount = 0;
+    const secretPhrase = document.getElementById("secret-phrase");
+    const senhaContainer = document.getElementById("senha-container");
+    const adminLinks = document.getElementById("admin-links");
+    const senhaInput = document.getElementById("senha");
 
-    if (!valor || !first_name || !email || !cpf) {
-      alert("Por favor, preencha nome, email, cpf e valor.");
-      return;
-    }
+    secretPhrase.addEventListener("click", () => {
+      clickCount++;
+      if (clickCount === 3) {
+        senhaContainer.style.display = "block";
+        senhaInput.focus();
+      }
+    });
 
-    fetch(`${baseUrl}/pix`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ valor, first_name, last_name, email, cpf })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert("Erro: " + data.error);
+    // Mostrar links se senha correta
+    senhaInput.addEventListener("input", () => {
+      if (senhaInput.value === "zankaadm") {
+        adminLinks.style.display = "block";
+        senhaContainer.style.display = "none";
+      }
+    });
+
+    async function gerarPix() {
+      const valor = parseFloat(document.getElementById("valor").value);
+      const first_name = document.getElementById("first_name").value.trim();
+      const last_name = document.getElementById("last_name").value.trim();
+      const cpf = document.getElementById("cpf").value.trim();
+      const cidade = document.getElementById("cidade").value.trim();
+
+      if (!valor || !first_name || !cpf || !cidade) {
+        alert("Preencha todos os campos obrigatórios.");
         return;
       }
-      paymentId = data.payment_id;
-      document.getElementById("resultado").innerHTML = `
-        <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" />
-        <p>Código Copia e Cola:</p>
-        <textarea id="codigoPix" rows="3" cols="60" readonly>${data.qr_code}</textarea>
-        <button id="btn-copiar" onclick="copiarCodigo()">Copiar Código</button>
-      `;
-      document.getElementById("status").innerText = "";
-      checarStatus();
-    })
-    .catch(() => alert("Erro ao gerar PIX"));
-  }
 
-  function copiarCodigo() {
-    const codigo = document.getElementById("codigoPix");
-    codigo.select();
-    codigo.setSelectionRange(0, 99999); // Para mobile
-    document.execCommand("copy");
-    alert("Código copiado para a área de transferência!");
-  }
+      try {
+        const response = await fetch(`${baseUrl}/pix`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ valor, first_name, last_name, cpf })
+        });
+        const data = await response.json();
 
-  function checarStatus() {
-    if (!paymentId) return;
+        if (data.error) {
+          alert("Erro: " + data.error);
+          return;
+        }
 
-    const interval = setInterval(() => {
-      fetch(`${baseUrl}/status/${paymentId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "approved") {
-            document.getElementById("status").innerText = "Pagamento Aprovado!";
-            clearInterval(interval);
-          } else {
-            console.log("Status atual:", data.status);
-          }
-        })
-        .catch(err => console.error("Erro ao verificar status:", err));
-    }, 5000);
+        paymentId = data.payment_id;
+        document.getElementById("resultado").innerHTML = `
+          <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" />
+          <p>Código Copia e Cola:</p>
+          <textarea id="codigoPix" rows="3" readonly>${data.qr_code}</textarea>
+          <button id="btn-copiar" onclick="copiarCodigo()">📋 Copiar Código</button>
+        `;
+        document.getElementById("status").innerText = "";
+        checarStatus();
 
-  }
+      } catch (err) {
+        alert("Erro ao gerar PIX");
+        console.error(err);
+      }
+    }
 
-  const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
+    function copiarCodigo() {
+      const codigo = document.getElementById("codigoPix");
+      codigo.select();
+      codigo.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      alert("Código copiado!");
+    }
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    async function salvarPagamentoNoBanco() {
+      const first_name = document.getElementById("first_name").value.trim();
+      const last_name = document.getElementById("last_name").value.trim();
+      const cpf = document.getElementById("cpf").value.trim();
+      const cidade = document.getElementById("cidade").value.trim();
+      const valor = parseFloat(document.getElementById("valor").value);
 
-async function carregarValorDoBanco() {
-  const { data, error } = await supabaseClient
-    .from("valor")
-    .select("valor")
-    .eq("id", 1)
-    .single();
+      const { error } = await supabaseClient
+        .from("pagamentos_pix")
+        .insert([{
+          first_name,
+          last_name,
+          cpf,
+          valor,
+          valor_pago: valor,
+          cidade,
+          payment_id: paymentId,
+          created_at: new Date().toISOString()
+        }]);
 
-  if (error) {
-    console.error("Erro ao buscar valor:", error);
-    return;
-  }
+      if (error) {
+        console.error("Erro ao salvar no Supabase:", error);
+        alert("Erro ao salvar o pagamento confirmado no banco.");
+      }
+    }
 
-  document.getElementById("valor").value = data.valor;
-}
+    function checarStatus() {
+      if (!paymentId) return;
+      const interval = setInterval(() => {
+        fetch(`${baseUrl}/status/${paymentId}`)
+          .then(res => res.json())
+          .then(async data => {
+            if (data.status === "approved") {
+              clearInterval(interval);
+              await salvarPagamentoNoBanco(); // só salva aqui quando aprovado
+              Swal.fire({
+                icon: 'success',
+                title: 'Pagamento Aprovado!',
+                text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
+                background: '#0f0f0f',
+                color: '#00ff88',
+                confirmButtonColor: '#00ff88',
+                confirmButtonText: 'OK'
+              });
+            } else {
+              console.log("Status atual:", data.status);
+            }
+          })
+          .catch(err => console.error("Erro ao verificar status:", err));
+      }, 5000);
+    }
 
-window.onload = carregarValorDoBanco;
-
-</script>
+    // Preencher valor na página de pagamento (se desejar pode ajustar)
+    document.getElementById("valor").value = "100"; // Exemplo: valor fixo ou preencher dinamicamente
+  </script>
 </body>
 </html>
