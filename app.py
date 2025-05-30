@@ -3,6 +3,8 @@ from flask_cors import CORS
 import mercadopago
 import os
 
+
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
@@ -26,27 +28,23 @@ def gerar_pix():
     # Dados do cliente
     first_name = data.get("first_name", "Cliente")
     last_name = data.get("last_name", "")
+    email = data.get("email", "teste@email.com")
     cpf = data.get("cpf", "00000000000")
-    email = data.get("email", None)  # Agora opcional
     texto_extra = data.get("texto_extra", "")
-
-    # Monta os dados do payer com ou sem o e-mail
-    payer_data = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "identification": {
-            "type": "CPF",
-            "number": cpf
-        }
-    }
-    if email:
-        payer_data["email"] = email
 
     payment_data = {
         "transaction_amount": valor,
         "description": f"Pagamento teste PIX - {texto_extra}",
         "payment_method_id": "pix",
-        "payer": payer_data
+        "payer": {
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "identification": {
+                "type": "CPF",
+                "number": cpf
+            }
+        }
     }
 
     try:
@@ -57,7 +55,7 @@ def gerar_pix():
         pagamentos_realizados.append({
             "payment_id": response["id"],
             "nome": f"{first_name} {last_name}",
-            "email": email if email else "",
+            "email": email,
             "cpf": cpf,
             "valor": valor,
             "status": "pendente"
@@ -91,7 +89,7 @@ def verificar_status(payment_id):
 def listar_pagamentos_aprovados():
     aprovados = [pag for pag in pagamentos_realizados if pag["status"] == "approved"]
     return jsonify(aprovados)
-
+    
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
