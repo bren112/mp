@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-ACCESS_TOKEN = "APP_USR-6628085664452409-012710-9be3f36b0a383a8f6fdc705736c66d76-536473269"
+ACCESS_TOKEN = "APP_USR-7801899979492888-053018-d5c1efe4c0b2b4909fbbca1920235fd8-2013746147"
 sdk = mercadopago.SDK(ACCESS_TOKEN)
 
 # Lista para armazenar os pagamentos

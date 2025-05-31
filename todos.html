@@ -2,75 +2,111 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Pagamentos Aprovados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagamentos Aprovados - Estilo Street Neon com Busca</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f4f6f8;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0f0f0f;
+      color: #f1f1f1;
+      margin: 30px auto;
+      max-width: 420px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00ff88;
     }
     h2 {
-      color: #2e7d32;
-      margin-bottom: 20px;
+      color: #00ff88;
+      text-align: center;
+      margin-bottom: 25px;
+      text-shadow: 0 0 8px #00ff88;
+      font-size: 2rem;
+      letter-spacing: 1.5px;
     }
 
-    /* Desktop: tabela normal */
-    table {
-      border-collapse: collapse;
+    /* Campo de busca */
+    #search {
       width: 100%;
-      background: white;
-      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
-      border-radius: 6px;
-      overflow: hidden;
+      padding: 12px 15px;
+      margin-bottom: 25px;
+      background-color: #1a1a1a;
+      border: 2px solid #00ff88;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1.1rem;
+      text-shadow: 0 0 3px #00ff88;
+      transition: all 0.3s ease;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px 15px;
-      text-align: left;
+    #search::placeholder {
+      color: #888;
     }
-    th {
-      background-color: #e8f5e9;
-      font-weight: bold;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+    #search:focus {
+      outline: none;
+      border-color: #00ffaa;
+      box-shadow: 0 0 8px #00ffaa;
+      background-color: #111;
     }
 
-    /* Mobile: esconder tabela, mostrar cards */
-    @media (max-width: 768px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-      thead {
-        display: none;
-      }
-      tbody tr {
-        background: white;
-        margin-bottom: 15px;
+    #cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .card {
+      background: #121212;
+      border-radius: 12px;
+      padding: 18px 22px;
+      border: 2px solid #00ff88;
+      box-shadow:
+        0 0 8px #00ff88,
+        0 0 15px #00ff88 inset;
+      transition: box-shadow 0.3s ease;
+      cursor: default;
+    }
+    .card:hover {
+      box-shadow:
+        0 0 20px #00ffaa,
+        0 0 25px #00ffaa inset;
+    }
+    .field {
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      color: #a0f8b8;
+      text-shadow: 0 0 3px #00ff88;
+    }
+    .label {
+      font-weight: 700;
+      color: #00ff88;
+      margin-right: 8px;
+      text-shadow: 0 0 5px #00ff88;
+    }
+    /* Scroll bar styling for overflow */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f0f0f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #00ff88;
+      border-radius: 4px;
+    }
+    @media (max-width: 480px) {
+      body {
+        margin: 15px auto;
         padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        border: 1px solid #ccc;
       }
-      tbody tr td {
-        border: none;
-        padding: 6px 0;
-        position: relative;
-        padding-left: 120px;
-        text-align: left;
-        font-size: 14px;
-        line-height: 1.3;
-        word-wrap: break-word;
+      h2 {
+        font-size: 1.8rem;
       }
-      tbody tr td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 15px;
-        top: 6px;
-        font-weight: bold;
-        color: #555;
-        white-space: nowrap;
+      .field {
+        font-size: 1rem;
       }
     }
   </style>
@@ -78,20 +114,11 @@
 <body>
   <h2>Lista de Pagamentos Aprovados</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>CPF</th>
-        <th>Valor</th>
-        <th>Cidade</th>
-        <th>Payment ID</th>
-      </tr>
-    </thead>
-    <tbody id="tabela-pagamentos">
-      <!-- Linhas serão inseridas via JavaScript -->
-    </tbody>
-  </table>
+  <input type="text" id="search" placeholder="Buscar por nome ou CPF..." />
+
+  <div id="cards-container">
+    <!-- Cards serão inseridos aqui -->
+  </div>
 
   <script>
     const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
@@ -99,8 +126,10 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let pagamentosData = [];
+
     async function carregarPagamentos() {
-      const tbody = document.getElementById("tabela-pagamentos");
+      const container = document.getElementById("cards-container");
 
       const { data, error } = await supabaseClient
         .from('pagamentos_pix')
@@ -108,29 +137,50 @@
 
       if (error) {
         console.error('Erro ao buscar pagamentos:', error);
-        tbody.innerHTML = `<tr><td colspan="5">Erro ao carregar dados.</td></tr>`;
+        container.innerHTML = `<p style="color:#ff0044; text-align:center;">Erro ao carregar dados.</p>`;
         return;
       }
 
       if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5">Nenhum pagamento encontrado.</td></tr>`;
+        container.innerHTML = `<p style="color:#ff0044; text-align:center;">Nenhum pagamento encontrado.</p>`;
         return;
       }
 
-      tbody.innerHTML = '';
+      pagamentosData = data;
+      renderizarCards(pagamentosData);
+    }
 
-      data.forEach(pag => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td data-label="Nome">${pag.first_name} ${pag.last_name || ''}</td>
-          <td data-label="CPF">${pag.cpf}</td>
-          <td data-label="Valor">R$ ${parseFloat(pag.valor).toFixed(2)}</td>
-          <td data-label="Cidade">${pag.cidade || ''}</td>
-          <td data-label="Payment ID">${pag.payment_id || ''}</td>
+    function renderizarCards(lista) {
+      const container = document.getElementById("cards-container");
+      container.innerHTML = '';
+
+      lista.forEach(pag => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="field"><span class="label">Nome:</span> ${pag.first_name} ${pag.last_name || ''}</div>
+          <div class="field"><span class="label">CPF:</span> ${pag.cpf}</div>
+          <div class="field"><span class="label">Valor:</span> R$ ${parseFloat(pag.valor).toFixed(2)}</div>
+          <div class="field"><span class="label">Cidade:</span> ${pag.cidade || '-'}</div>
+          <div class="field"><span class="label">Payment ID:</span> ${pag.payment_id || '-'}</div>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(card);
       });
     }
+
+    function filtrarCards() {
+      const termo = document.getElementById('search').value.toLowerCase();
+
+      const filtrados = pagamentosData.filter(pag => {
+        const nomeCompleto = (pag.first_name + ' ' + (pag.last_name || '')).toLowerCase();
+        const cpf = (pag.cpf || '').toLowerCase();
+        return nomeCompleto.includes(termo) || cpf.includes(termo);
+      });
+
+      renderizarCards(filtrados);
+    }
+
+    document.getElementById('search').addEventListener('input', filtrarCards);
 
     carregarPagamentos();
   </script>
