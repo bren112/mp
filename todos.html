@@ -3,39 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <title>Pagamentos Aprovados</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 30px;
+      background: #f4f6f8;
     }
-
     h2 {
       color: #2e7d32;
+      margin-bottom: 20px;
     }
 
+    /* Desktop: tabela normal */
     table {
       border-collapse: collapse;
       width: 100%;
+      background: white;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+      border-radius: 6px;
+      overflow: hidden;
     }
-
     th, td {
       border: 1px solid #ccc;
-      padding: 10px;
+      padding: 10px 15px;
       text-align: left;
     }
-
     th {
       background-color: #e8f5e9;
       font-weight: bold;
     }
-
     tr:nth-child(even) {
       background-color: #f9f9f9;
     }
 
-    .status {
-      font-weight: bold;
-      color: green;
+    /* Mobile: esconder tabela, mostrar cards */
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead {
+        display: none;
+      }
+      tbody tr {
+        background: white;
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        border: 1px solid #ccc;
+      }
+      tbody tr td {
+        border: none;
+        padding: 6px 0;
+        position: relative;
+        padding-left: 120px;
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.3;
+        word-wrap: break-word;
+      }
+      tbody tr td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 6px;
+        font-weight: bold;
+        color: #555;
+        white-space: nowrap;
+      }
     }
   </style>
 </head>
@@ -46,10 +82,9 @@
     <thead>
       <tr>
         <th>Nome</th>
-        <th>Email</th>
         <th>CPF</th>
         <th>Valor</th>
-        <th>Status</th>
+        <th>Cidade</th>
         <th>Payment ID</th>
       </tr>
     </thead>
@@ -59,36 +94,45 @@
   </table>
 
   <script>
-    const baseUrl = "https://festfy.onrender.com";
+    const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
 
-    fetch(`${baseUrl}/pagamentos`)
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.getElementById("tabela-pagamentos");
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6">Nenhum pagamento aprovado encontrado.</td></tr>`;
-          return;
-        }
+    async function carregarPagamentos() {
+      const tbody = document.getElementById("tabela-pagamentos");
 
-        data.forEach(pag => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${pag.nome}</td>
-            <td>${pag.email}</td>
-            <td>${pag.cpf}</td>
-            <td>R$ ${pag.valor.toFixed(2)}</td>
-            <td class="status">${pag.status}</td>
-            <td>${pag.payment_id}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      })
-      .catch(err => {
-        console.error("Erro ao carregar pagamentos:", err);
-        document.getElementById("tabela-pagamentos").innerHTML = `
-          <tr><td colspan="6">Erro ao carregar dados.</td></tr>`;
+      const { data, error } = await supabaseClient
+        .from('pagamentos_pix')
+        .select('first_name, last_name, cpf, valor, cidade, payment_id');
+
+      if (error) {
+        console.error('Erro ao buscar pagamentos:', error);
+        tbody.innerHTML = `<tr><td colspan="5">Erro ao carregar dados.</td></tr>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5">Nenhum pagamento encontrado.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+
+      data.forEach(pag => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td data-label="Nome">${pag.first_name} ${pag.last_name || ''}</td>
+          <td data-label="CPF">${pag.cpf}</td>
+          <td data-label="Valor">R$ ${parseFloat(pag.valor).toFixed(2)}</td>
+          <td data-label="Cidade">${pag.cidade || ''}</td>
+          <td data-label="Payment ID">${pag.payment_id || ''}</td>
+        `;
+        tbody.appendChild(tr);
       });
+    }
+
+    carregarPagamentos();
   </script>
 </body>
 </html>
