@@ -254,30 +254,64 @@
     }
 
     function checarStatus() {
-      if (!paymentId) return;
-      const interval = setInterval(() => {
-        fetch(`${baseUrl}/status/${paymentId}`)
-          .then(res => res.json())
-          .then(async data => {
-            if (data.status === "approved") {
-              clearInterval(interval);
-              await salvarPagamentoNoBanco(); // só salva aqui quando aprovado
-              Swal.fire({
-                icon: 'success',
-                title: 'Pagamento Aprovado!',
-                text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
-                background: '#0f0f0f',
-                color: '#00ff88',
-                confirmButtonColor: '#00ff88',
-                confirmButtonText: 'OK'
-              });
-            } else {
-              console.log("Status atual:", data.status);
-            }
-          })
-          .catch(err => console.error("Erro ao verificar status:", err));
-      }, 5000);
-    }
+  if (!paymentId) return;
+  const interval = setInterval(() => {
+    fetch(`${baseUrl}/status/${paymentId}`)
+      .then(res => res.json())
+      .then(async data => {
+        if (data.status === "approved") {
+          clearInterval(interval);
+          await salvarPagamentoNoBanco(); // só salva aqui quando aprovado
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Pagamento Aprovado!',
+            text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
+            background: '#0f0f0f',
+            color: '#00ff88',
+            confirmButtonColor: '#00ff88',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            // Aqui substituímos todo o body pelo botão para o link
+            document.body.innerHTML = `
+              <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#0f0f0f; margin:0;">
+                <button 
+                  id="link-button" 
+                  style="
+                    padding: 15px 30px; 
+                    font-size: 18px; 
+                    background-color: #00ff88; 
+                    border:none; 
+                    border-radius: 8px; 
+                    cursor: pointer; 
+                    font-family: 'Orbitron', sans-serif;
+                    color: #000;
+                    box-shadow: 0 0 12px #00ff88;
+                    transition: background-color 0.3s ease;
+                  "
+                  onmouseover="this.style.backgroundColor='#00ffaa'"
+                  onmouseout="this.style.backgroundColor='#00ff88'"
+                >
+                  Ir para o Link
+                </button>
+              </div>
+            `;
+
+            // Adiciona o evento para redirecionar ao clicar
+            const btn = document.getElementById("link-button");
+            btn.addEventListener("click", () => {
+              // Coloque o link desejado aqui:
+              window.location.href = "https://seu-link-aqui.com";
+            });
+          });
+
+        } else {
+          console.log("Status atual:", data.status);
+        }
+      })
+      .catch(err => console.error("Erro ao verificar status:", err));
+  }, 5000);
+}
 
     async function carregarValorDoBanco() {
       const { data, error } = await supabaseClient
