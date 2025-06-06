@@ -1,0 +1,356 @@
+<!DOCTYPE html> 
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento PIX</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0f0f0f;
+      color: #f1f1f1;
+      margin: 30px auto;
+      max-width: 420px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px #00ff88;
+    }
+    h2 {
+      color: #00ff88;
+      text-align: center;
+      margin-bottom: 25px;
+      text-shadow: 0 0 5px #00ff88;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px 14px;
+      margin-bottom: 15px;
+      background-color: #1a1a1a;
+      color: #fff;
+      border: 1px solid #00ff88;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #888;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #00ffaa;
+      box-shadow: 0 0 5px #00ffaa;
+    }
+    button {
+      background-color: #00ff88;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background-color: #00ffaa;
+      box-shadow: 0 0 10px #00ffaa;
+    }
+    #resultado img {
+      display: block;
+      margin: 20px auto 10px;
+      width: 180px;
+      height: 180px;
+      border: 2px solid #00ff88;
+      border-radius: 10px;
+    }
+    #resultado p {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    #resultado textarea {
+      resize: none;
+      font-family: monospace;
+      background-color: #111;
+      color: #0f0;
+    }
+    #btn-copiar {
+      background-color: #111;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      font-weight: bold;
+      padding: 10px 14px;
+      border-radius: 6px;
+      width: 100%;
+    }
+    #btn-copiar:hover {
+      background-color: #00ff88;
+      color: #000;
+    }
+    #status {
+      font-weight: bold;
+      color: #00ff88;
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+    a {
+      text-decoration: none;
+      color: #00ffaa;
+      font-weight: bold;
+      display: block;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 18px;
+      transition: color 0.3s ease;
+    }
+    a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 5px #00ffaa;
+    }
+    .link-image {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .link-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 2px solid #00ff88;
+    }
+    #secret-input {
+      display: none;
+      margin-top: 10px;
+    }
+    #secret-links {
+      display: none;
+      margin-top: 10px;
+    }
+    @media screen and (max-width: 480px) {
+      body {
+        margin: 20px;
+      }
+      a {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Links secretos escondidos inicialmente -->
+  <div id="secret-links">
+    <a href="todos.html">📄 Ver Pagamentos Aprovados</a>
+    <a href="adm.html">⚙️ Alterar Valor</a>
+  </div>
+
+  <!-- Frase clicável -->
+  <h4 id="secret-phrase" style="text-align: justify; cursor: pointer;">
+    “quem faz a festa são vocês, obrigado mais uma vez, nos vemos em breve…”
+  </h4>
+
+  <!-- Input para digitar o código secreto -->
+  <input type="text" id="secret-input" placeholder="Digite o código secreto" />
+
+  <div class="link-image">
+    <img src="./fundo.png" alt="Imagem PIX" />
+  </div>
+
+  <h2>💸 Pagamento via PIX</h2>
+
+  <input type="text" id="first_name" placeholder="Nome" />
+  <input type="text" id="last_name" placeholder="Sobrenome" />
+  <input type="text" id="cpf" placeholder="CPF" />
+  <input type="text" id="cidade" placeholder="Cidade" />
+  <input type="number" id="valor" disabled />
+  <button onclick="gerarPix()">🎯 Gerar PIX</button>
+
+  <div id="resultado"></div>
+  <p id="status"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const baseUrl = "https://festfy.onrender.com";
+    let paymentId = null;
+
+    const SUPABASE_URL = "https://jrbpwisclowinultbehj.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYnB3aXNjbG93aW51bHRiZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3NTc4NjMsImV4cCI6MjA0MTMzMzg2M30.dFbRcWi0v7zdiR58ZcuTNfMTzi_GKg_56VL1-UT2JYs";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function gerarPix() {
+      const valor = parseFloat(document.getElementById("valor").value);
+      const first_name = document.getElementById("first_name").value.trim();
+      const last_name = document.getElementById("last_name").value.trim();
+      const cpf = document.getElementById("cpf").value.trim();
+      const cidade = document.getElementById("cidade").value.trim();
+
+      if (!valor || !first_name || !cpf || !cidade) {
+        alert("Preencha todos os campos obrigatórios.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${baseUrl}/pix`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ valor, first_name, last_name, cpf })
+        });
+        const data = await response.json();
+
+        if (data.error) {
+          alert("Erro: " + data.error);
+          return;
+        }
+
+        paymentId = data.payment_id;
+        document.getElementById("resultado").innerHTML = `
+          <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" />
+          <p>Código Copia e Cola:</p>
+          <textarea id="codigoPix" rows="3" readonly>${data.qr_code}</textarea>
+          <button id="btn-copiar" onclick="copiarCodigo()">📋 Copiar Código</button>
+        `;
+        document.getElementById("status").innerText = "";
+        checarStatus();
+
+      } catch (err) {
+        alert("Erro ao gerar PIX");
+        console.error(err);
+      }
+    }
+
+    function copiarCodigo() {
+      const codigo = document.getElementById("codigoPix");
+      codigo.select();
+      codigo.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      alert("Código copiado!");
+    }
+
+    async function salvarPagamentoNoBanco() {
+      const first_name = document.getElementById("first_name").value.trim();
+      const last_name = document.getElementById("last_name").value.trim();
+      const cpf = document.getElementById("cpf").value.trim();
+      const cidade = document.getElementById("cidade").value.trim();
+      const valor = parseFloat(document.getElementById("valor").value);
+
+      const { error } = await supabaseClient
+        .from("pagamentos_pix")
+        .insert([{
+          first_name,
+          last_name,
+          cpf,
+          valor,
+          valor_pago: valor,
+          cidade,
+          payment_id: paymentId,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) {
+        console.error("Erro ao salvar no Supabase:", error);
+        alert("Erro ao salvar o pagamento confirmado no banco.");
+      }
+    }
+
+    function checarStatus() {
+  if (!paymentId) return;
+  const interval = setInterval(() => {
+    fetch(`${baseUrl}/status/${paymentId}`)
+      .then(res => res.json())
+      .then(async data => {
+        if (data.status === "approved") {
+          clearInterval(interval);
+          await salvarPagamentoNoBanco(); // só salva aqui quando aprovado
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Pagamento Aprovado!',
+            text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
+            background: '#0f0f0f',
+            color: '#00ff88',
+            confirmButtonColor: '#00ff88',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            // Aqui substituímos todo o body pelo botão para o link
+            document.body.innerHTML = `
+              <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#0f0f0f; margin:0;">
+                <button 
+                  id="link-button" 
+                  style="
+                    padding: 15px 30px; 
+                    font-size: 18px; 
+                    background-color: #00ff88; 
+                    border:none; 
+                    border-radius: 8px; 
+                    cursor: pointer; 
+                    font-family: 'Orbitron', sans-serif;
+                    color: #000;
+                    box-shadow: 0 0 12px #00ff88;
+                    transition: background-color 0.3s ease;
+                  "
+                  onmouseover="this.style.backgroundColor='#00ffaa'"
+                  onmouseout="this.style.backgroundColor='#00ff88'"
+                >
+                  Ir para o Link
+                </button>
+              </div>
+            `;
+
+            // Adiciona o evento para redirecionar ao clicar
+            const btn = document.getElementById("link-button");
+            btn.addEventListener("click", () => {
+              // Coloque o link desejado aqui:
+              window.location.href = "https://festfy.vercel.app/saber.html";
+            });
+          });
+
+        } else {
+          console.log("Status atual:", data.status);
+        }
+      })
+      .catch(err => console.error("Erro ao verificar status:", err));
+  }, 5000);
+}
+
+    async function carregarValorDoBanco() {
+      const { data, error } = await supabaseClient
+        .from("valor")
+        .select("valor")
+        .order("id", { ascending: false })
+        .limit(1);
+
+      if (!error && data.length > 0) {
+        document.getElementById("valor").value = data[0].valor;
+      } else {
+        document.getElementById("valor").value = 3;
+      }
+    }
+
+    carregarValorDoBanco();
+
+    // --- Nova lógica para o clique secreto e input de código ---
+    const phrase = document.getElementById("secret-phrase");
+    const secretInput = document.getElementById("secret-input");
+    const secretLinks = document.getElementById("secret-links");
+    let clickCount = 0;
+
+    phrase.addEventListener("click", () => {
+      clickCount++;
+      if (clickCount === 3) {
+        secretInput.style.display = "block";
+        secretInput.focus();
+      }
+    });
+
+    secretInput.addEventListener("input", () => {
+      const value = secretInput.value.trim();
+      if (value === "zankaadm") {
+        secretLinks.style.display = "block";
+      } else {
+        secretLinks.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
