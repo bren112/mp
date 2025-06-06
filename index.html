@@ -200,8 +200,8 @@
         document.getElementById("resultado").innerHTML = `
           <p style="text-align:center; color:red;">❌ Tempo excedido. Por favor, preencha os campos novamente.</p>
         `;
-        setTimeout(() => location.reload(), 3000); // Recarrega após 3s
-      }, 20000); // 20 segundos
+        setTimeout(() => location.reload(), 2000); 
+      }, 15000); 
     
       try {
         const response = await fetch(`${baseUrl}/pix`, {
