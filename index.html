@@ -184,26 +184,43 @@
       const last_name = document.getElementById("last_name").value.trim();
       const cpf = document.getElementById("cpf").value.trim();
       const cidade = document.getElementById("cidade").value.trim();
-
+    
       if (!valor || !first_name || !cpf || !cidade) {
         alert("Preencha todos os campos obrigatórios.");
         return;
       }
-
+    
+      // Mostra um texto de carregando
+      document.getElementById("resultado").innerHTML = `
+        <p style="text-align:center; color:#00ff88;">⏳ Gerando QR Code, por favor aguarde...</p>
+      `;
+    
+      // Timer para fallback se demorar demais (20 segundos)
+      const tempoLimite = setTimeout(() => {
+        document.getElementById("resultado").innerHTML = `
+          <p style="text-align:center; color:red;">❌ Tempo excedido. Por favor, preencha os campos novamente.</p>
+        `;
+        setTimeout(() => location.reload(), 3000); // Recarrega após 3s
+      }, 20000); // 20 segundos
+    
       try {
         const response = await fetch(`${baseUrl}/pix`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ valor, first_name, last_name, cpf })
         });
+    
         const data = await response.json();
-
+    
+        clearTimeout(tempoLimite); // Cancela o timeout se respondeu
+    
         if (data.error) {
           alert("Erro: " + data.error);
           return;
         }
-
+    
         paymentId = data.payment_id;
+    
         document.getElementById("resultado").innerHTML = `
           <img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code PIX" />
           <p>Código Copia e Cola:</p>
@@ -212,13 +229,14 @@
         `;
         document.getElementById("status").innerText = "";
         checarStatus();
-
+    
       } catch (err) {
+        clearTimeout(tempoLimite);
         alert("Erro ao gerar PIX");
         console.error(err);
       }
     }
-
+    
     function copiarCodigo() {
       const codigo = document.getElementById("codigoPix");
       codigo.select();
@@ -233,7 +251,25 @@
       const cpf = document.getElementById("cpf").value.trim();
       const cidade = document.getElementById("cidade").value.trim();
       const valor = parseFloat(document.getElementById("valor").value);
-
+    
+      // Verifica se o CPF já está salvo
+      const { data: existing, error: selectError } = await supabaseClient
+        .from("pagamentos_pix")
+        .select("id")
+        .eq("cpf", cpf);
+    
+      if (selectError) {
+        console.error("Erro ao verificar CPF:", selectError);
+        alert("Erro ao verificar CPF no banco.");
+        return;
+      }
+    
+      if (existing.length > 0) {
+        alert("Este CPF já foi utilizado para um pagamento.");
+        return;
+      }
+    
+      // CPF não existe, pode salvar
       const { error } = await supabaseClient
         .from("pagamentos_pix")
         .insert([{
@@ -246,13 +282,13 @@
           payment_id: paymentId,
           created_at: new Date().toISOString()
         }]);
-
+    
       if (error) {
         console.error("Erro ao salvar no Supabase:", error);
         alert("Erro ao salvar o pagamento confirmado no banco.");
       }
     }
-
+    
     function checarStatus() {
   if (!paymentId) return;
   const interval = setInterval(() => {
