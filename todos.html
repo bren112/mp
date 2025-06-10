@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pagamentos Aprovados - Estilo Street Neon com Busca</title>
+  <title>Pagamentos Aprovados - FESTFY</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
@@ -16,7 +16,7 @@
       background-color: #0f0f0f;
       color: #f1f1f1;
       margin: 30px auto;
-      max-width: 420px;
+      max-width: 460px;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 0 20px #00ff88;
@@ -24,13 +24,31 @@
     h2 {
       color: #00ff88;
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       text-shadow: 0 0 8px #00ff88;
       font-size: 2rem;
       letter-spacing: 1.5px;
     }
 
-    /* Campo de busca */
+    #dashboard {
+      background: #161616;
+      border: 2px solid #00ff88;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 0 15px #00ff88;
+      text-align: center;
+    }
+    .dash-item {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #a0f8b8;
+    }
+    .dash-item span {
+      color: #00ff88;
+      font-weight: bold;
+    }
+
     #search {
       width: 100%;
       padding: 12px 15px;
@@ -41,16 +59,6 @@
       color: #fff;
       font-size: 1.1rem;
       text-shadow: 0 0 3px #00ff88;
-      transition: all 0.3s ease;
-    }
-    #search::placeholder {
-      color: #888;
-    }
-    #search:focus {
-      outline: none;
-      border-color: #00ffaa;
-      box-shadow: 0 0 8px #00ffaa;
-      background-color: #111;
     }
 
     #cards-container {
@@ -58,6 +66,7 @@
       flex-direction: column;
       gap: 20px;
     }
+
     .card {
       background: #121212;
       border-radius: 12px;
@@ -66,37 +75,21 @@
       box-shadow:
         0 0 8px #00ff88,
         0 0 15px #00ff88 inset;
-      transition: box-shadow 0.3s ease;
-      cursor: default;
     }
-    .card:hover {
-      box-shadow:
-        0 0 20px #00ffaa,
-        0 0 25px #00ffaa inset;
-    }
+
     .field {
       margin-bottom: 10px;
       font-size: 1.1rem;
       color: #a0f8b8;
-      text-shadow: 0 0 3px #00ff88;
     }
+
     .label {
       font-weight: 700;
       color: #00ff88;
       margin-right: 8px;
       text-shadow: 0 0 5px #00ff88;
     }
-    /* Scroll bar styling for overflow */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0f0f0f;
-    }
-    ::-webkit-scrollbar-thumb {
-      background-color: #00ff88;
-      border-radius: 4px;
-    }
+
     @media (max-width: 480px) {
       body {
         margin: 15px auto;
@@ -105,14 +98,19 @@
       h2 {
         font-size: 1.8rem;
       }
-      .field {
+      .field, .dash-item {
         font-size: 1rem;
       }
     }
   </style>
 </head>
 <body>
-  <h2>Lista de Pagamentos Aprovados</h2>
+  <h2>Pagamentos Aprovados</h2>
+
+  <div id="dashboard">
+    <div class="dash-item">Total de Pagadores: <span id="total-pessoas">0</span></div>
+    <div class="dash-item">Valor Arrecadado: <span id="valor-total">R$ 0,00</span></div>
+  </div>
 
   <input type="text" id="search" placeholder="Buscar por nome ou CPF..." />
 
@@ -147,7 +145,16 @@
       }
 
       pagamentosData = data;
-      renderizarCards(pagamentosData);
+      atualizarDashboard(data);
+      renderizarCards(data);
+    }
+
+    function atualizarDashboard(lista) {
+      const totalPessoas = lista.length;
+      const valorTotal = lista.reduce((soma, pag) => soma + parseFloat(pag.valor || 0), 0);
+
+      document.getElementById('total-pessoas').textContent = totalPessoas;
+      document.getElementById('valor-total').textContent = `R$ ${valorTotal.toFixed(2)}`;
     }
 
     function renderizarCards(lista) {
@@ -177,6 +184,7 @@
         return nomeCompleto.includes(termo) || cpf.includes(termo);
       });
 
+      atualizarDashboard(filtrados);
       renderizarCards(filtrados);
     }
 
