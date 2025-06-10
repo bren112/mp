@@ -3,106 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pagamentos Aprovados - FESTFY</title>
+  <title>Pagamentos Aprovados - Estilo Street Neon com Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Freckle+Face&display=swap');
+  
     * {
       box-sizing: border-box;
     }
+  
     body {
-      font-family: 'Orbitron', sans-serif;
-      background-color: #0f0f0f;
-      color: #f1f1f1;
+      font-family: 'Freckle Face', cursive;
+      background: url('https://i.imgur.com/wc0V9j6.png') repeat; /* textura chita */
+      color: #333;
       margin: 30px auto;
-      max-width: 460px;
+      max-width: 480px;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 20px #00ff88;
+      border: 5px dashed #fbb03b;
+      background-color: #fffbe6;
     }
+  
     h2 {
-      color: #00ff88;
+      color: #c62828;
       text-align: center;
       margin-bottom: 20px;
-      text-shadow: 0 0 8px #00ff88;
-      font-size: 2rem;
-      letter-spacing: 1.5px;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px #ffeb3b;
     }
-
+  
     #dashboard {
-      background: #161616;
-      border: 2px solid #00ff88;
+      background: #fff3cd;
+      border: 3px solid #ff9800;
       border-radius: 12px;
-      padding: 15px 20px;
+      padding: 15px;
       margin-bottom: 25px;
-      box-shadow: 0 0 15px #00ff88;
       text-align: center;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
     }
+  
     .dash-item {
       font-size: 1.2rem;
       margin-bottom: 10px;
-      color: #a0f8b8;
+      color: #4e342e;
     }
+  
     .dash-item span {
-      color: #00ff88;
       font-weight: bold;
+      color: #d84315;
     }
-
+  
     #search {
       width: 100%;
-      padding: 12px 15px;
+      padding: 12px;
       margin-bottom: 25px;
-      background-color: #1a1a1a;
-      border: 2px solid #00ff88;
+      border: 2px solid #ff9800;
       border-radius: 8px;
-      color: #fff;
       font-size: 1.1rem;
-      text-shadow: 0 0 3px #00ff88;
     }
-
+  
     #cards-container {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
-
+  
     .card {
-      background: #121212;
+      background: #fffde7;
+      border: 2px solid #ffcc80;
       border-radius: 12px;
-      padding: 18px 22px;
-      border: 2px solid #00ff88;
-      box-shadow:
-        0 0 8px #00ff88,
-        0 0 15px #00ff88 inset;
+      padding: 18px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+      position: relative;
     }
-
+  
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 10px;
+      width: 30px;
+      height: 30px;
+      background: url('https://i.imgur.com/tXJWXyy.png') no-repeat center/contain; /* bandeirinha */
+    }
+  
     .field {
       margin-bottom: 10px;
       font-size: 1.1rem;
-      color: #a0f8b8;
+      color: #5d4037;
     }
-
+  
     .label {
       font-weight: 700;
-      color: #00ff88;
-      margin-right: 8px;
-      text-shadow: 0 0 5px #00ff88;
+      color: #bf360c;
     }
-
+  
     @media (max-width: 480px) {
       body {
         margin: 15px auto;
         padding: 15px;
       }
+  
       h2 {
-        font-size: 1.8rem;
+        font-size: 2rem;
       }
+  
       .field, .dash-item {
         font-size: 1rem;
       }
     }
   </style>
+  
 </head>
 <body>
   <h2>Pagamentos Aprovados</h2>
