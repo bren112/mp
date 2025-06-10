@@ -175,10 +175,40 @@
     background-size: contain;
     margin: -20px -20px 20px -20px;
   }
+  .video-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 60px 20px;
+      background-color: black;
+    }
+
+    video {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 16px;
+    }
+
+   #conteudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 </style>
 
 </head>
 <body>
+  <div class="video-container" id="videoContainer">
+    <video autoplay muted playsinline id="introVideo">
+      <source src="/video.mov" type="video/mp4">
+      Seu navegador não suporta vídeo.
+    </video>
+  </div>
+
+  <!-- Conteúdo da página começa aqui -->
+  <div id="conteudo">
   <!-- Links secretos escondidos inicialmente -->
   <div id="secret-links">
     <a href="todos.html">📄 Ver Pagamentos Aprovados</a>
@@ -213,6 +243,15 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
+     const video = document.getElementById('introVideo');
+    const videoContainer = document.getElementById('videoContainer');
+    const conteudo = document.getElementById('conteudo');
+
+    video.addEventListener('ended', () => {
+      videoContainer.style.display = 'none';
+      conteudo.style.display = 'flex';
+    });
+    
     const baseUrl = "https://festfy.onrender.com";
     let paymentId = null;
 
@@ -333,69 +372,62 @@
     
     function checarStatus() {
   if (!paymentId) return;
-  const interval = setInterval(async () => {
-    try {
-      const res = await fetch(`${baseUrl}/status/${paymentId}`);
-      const data = await res.json();
+  const interval = setInterval(() => {
+    fetch(`${baseUrl}/status/${paymentId}`)
+      .then(res => res.json())
+      .then(async data => {
+        if (data.status === "approved") {
+          clearInterval(interval);
+          await salvarPagamentoNoBanco(); // só salva aqui quando aprovado
 
-      if (data.status === "approved") {
-        clearInterval(interval);
+          Swal.fire({
+            icon: 'success',
+            title: 'Pagamento Aprovado!',
+            text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
+            background: '#0f0f0f',
+            color: '#ff9900;',
+            confirmButtonColor: '#ff9900;',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            // Aqui substituímos todo o body pelo botão para o link
+            document.body.innerHTML = `
+              <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#0f0f0f; margin:0;">
+                <button 
+                  id="link-button" 
+                  style="
+                    padding: 15px 30px; 
+                    font-size: 18px; 
+                    background-color: #ff9900;;
+                    border:none; 
+                    border-radius: 8px; 
+                    cursor: pointer; 
+                    font-family: 'Orbitron', sans-serif;
+                    color: #000;
+                    box-shadow: 0 0 12px #ff9900;
+                    transition: background-color 0.3s ease;
+                  "
+                  onmouseover="this.style.backgroundColor='#ff9900'"
+                  onmouseout="this.style.backgroundColor='#ff9900'"
+                >
+                  Ir para o Link
+                </button>
+              </div>
+            `;
 
-        try {
-          await salvarPagamentoNoBanco();  // salvar primeiro
-        } catch (err) {
-          console.error("Erro ao salvar pagamento:", err);
-          alert("Erro ao salvar pagamento no banco.");
-          return;
-        }
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Pagamento Aprovado!',
-          text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
-          background: '#0f0f0f',
-          color: '#ff9900',
-          confirmButtonColor: '#ff9900',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          // Substitui o body por botão para o link
-          document.body.innerHTML = `
-            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:rgb(237, 176, 44); margin:0;">
-              <button 
-                id="link-button" 
-                style="
-                  padding: 15px 30px; 
-                  font-size: 18px; 
-                  background-color: #ff9900;
-                  border:none; 
-                  border-radius: 8px; 
-                  cursor: pointer; 
-                  font-family: 'Orbitron', sans-serif;
-                  color: #000;
-                  box-shadow: 0 0 12px #ff9900;
-                  transition: background-color 0.3s ease;
-                "
-                onmouseover="this.style.backgroundColor='#ff9900'"
-                onmouseout="this.style.backgroundColor='#ff9900'"
-              >
-                Ir para o Link
-              </button>
-            </div>
-          `;
-          const btn = document.getElementById("link-button");
-          btn.addEventListener("click", () => {
-            window.location.href = "https://festfy.vercel.app/saber.html";
+            // Adiciona o evento para redirecionar ao clicar
+            const btn = document.getElementById("link-button");
+            btn.addEventListener("click", () => {
+              // Coloque o link desejado aqui:
+              window.location.href = "https://festfy.vercel.app/saber.html";
+            });
           });
-        });
 
-      } else {
-        // Aqui continua seu código para status pendentes
-        document.getElementById("status").innerText = `Status do pagamento: ${data.status}`;
-      }
-    } catch (err) {
-      console.error("Erro ao checar status:", err);
-    }
-  }, 3000);
+        } else {
+          console.log("Status atual:", data.status);
+        }
+      })
+      .catch(err => console.error("Erro ao verificar status:", err));
+  }, 5000);
 }
 
     async function carregarValorDoBanco() {
@@ -437,5 +469,6 @@
       }
     });
   </script>
+  </div>
 </body>
 </html>
