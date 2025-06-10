@@ -333,62 +333,69 @@
     
     function checarStatus() {
   if (!paymentId) return;
-  const interval = setInterval(() => {
-    fetch(`${baseUrl}/status/${paymentId}`)
-      .then(res => res.json())
-      .then(async data => {
-        if (data.status === "approved") {
-          clearInterval(interval);
-          await salvarPagamentoNoBanco(); // só salva aqui quando aprovado
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`${baseUrl}/status/${paymentId}`);
+      const data = await res.json();
 
-          Swal.fire({
-            icon: 'success',
-            title: 'Pagamento Aprovado!',
-            text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
-            background: '#0f0f0f',
-            color: '#ff9900;',
-            confirmButtonColor: '#ff9900;',
-            confirmButtonText: 'OK'
-          }).then(() => {
-            // Aqui substituímos todo o body pelo botão para o link
-            document.body.innerHTML = `
-              <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:rgb(237, 176, 44); margin:0;">
-                <button 
-                  id="link-button" 
-                  style="
-                    padding: 15px 30px; 
-                    font-size: 18px; 
-                    background-color: #ff9900;;
-                    border:none; 
-                    border-radius: 8px; 
-                    cursor: pointer; 
-                    font-family: 'Orbitron', sans-serif;
-                    color: #000;
-                    box-shadow: 0 0 12px #ff9900;
-                    transition: background-color 0.3s ease;
-                  "
-                  onmouseover="this.style.backgroundColor='#ff9900'"
-                  onmouseout="this.style.backgroundColor='#ff9900'"
-                >
-                  Ir para o Link
-                </button>
-              </div>
-            `;
+      if (data.status === "approved") {
+        clearInterval(interval);
 
-            // Adiciona o evento para redirecionar ao clicar
-            const btn = document.getElementById("link-button");
-            btn.addEventListener("click", () => {
-              // Coloque o link desejado aqui:
-              window.location.href = "https://festfy.vercel.app/saber.html";
-            });
-          });
-
-        } else {
-          console.log("Status atual:", data.status);
+        try {
+          await salvarPagamentoNoBanco();  // salvar primeiro
+        } catch (err) {
+          console.error("Erro ao salvar pagamento:", err);
+          alert("Erro ao salvar pagamento no banco.");
+          return;
         }
-      })
-      .catch(err => console.error("Erro ao verificar status:", err));
-  }, 5000);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Pagamento Aprovado!',
+          text: 'Obrigado! Seu pagamento foi confirmado com sucesso.',
+          background: '#0f0f0f',
+          color: '#ff9900',
+          confirmButtonColor: '#ff9900',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          // Substitui o body por botão para o link
+          document.body.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:rgb(237, 176, 44); margin:0;">
+              <button 
+                id="link-button" 
+                style="
+                  padding: 15px 30px; 
+                  font-size: 18px; 
+                  background-color: #ff9900;
+                  border:none; 
+                  border-radius: 8px; 
+                  cursor: pointer; 
+                  font-family: 'Orbitron', sans-serif;
+                  color: #000;
+                  box-shadow: 0 0 12px #ff9900;
+                  transition: background-color 0.3s ease;
+                "
+                onmouseover="this.style.backgroundColor='#ff9900'"
+                onmouseout="this.style.backgroundColor='#ff9900'"
+              >
+                Ir para o Link
+              </button>
+            </div>
+          `;
+          const btn = document.getElementById("link-button");
+          btn.addEventListener("click", () => {
+            window.location.href = "https://festfy.vercel.app/saber.html";
+          });
+        });
+
+      } else {
+        // Aqui continua seu código para status pendentes
+        document.getElementById("status").innerText = `Status do pagamento: ${data.status}`;
+      }
+    } catch (err) {
+      console.error("Erro ao checar status:", err);
+    }
+  }, 3000);
 }
 
     async function carregarValorDoBanco() {
